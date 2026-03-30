@@ -1,5 +1,11 @@
 package com.retail.ordering.service;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.retail.ordering.dto.ProductDTO;
 import com.retail.ordering.dto.ProductRequest;
 import com.retail.ordering.entity.Category;
@@ -9,11 +15,6 @@ import com.retail.ordering.exception.ResourceNotFoundException;
 import com.retail.ordering.repository.CategoryRepository;
 import com.retail.ordering.repository.InventoryRepository;
 import com.retail.ordering.repository.ProductRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
