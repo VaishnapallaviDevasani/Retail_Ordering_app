@@ -94,8 +94,8 @@ export default function Products() {
               <label className="block text-sm text-gray-400 mb-1">Category</label>
               <select value={form.categoryId} onChange={e => setForm({...form, categoryId: e.target.value})}
                 className="input-field" required>
-                <option value="">Select category</option>
-                {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                <option value="" style={{ color: 'black' }}>Select category</option>
+                {categories.map(c => <option key={c.id} value={c.id} style={{ color: 'black' }}>{c.name}</option>)}
               </select>
             </div>
             <div>
