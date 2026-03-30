@@ -44,12 +44,12 @@ export default function Login() {
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Username</label>
               <input type="text" value={username} onChange={(e) => setUsername(e.target.value)}
-                className="input-field" placeholder="admin" required />
+                className="input-field" placeholder="Enter username" required />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">Password</label>
               <input type="password" value={password} onChange={(e) => setPassword(e.target.value)}
-                className="input-field" placeholder="••••••••" required />
+                className="input-field" placeholder="Enter password" required />
             </div>
             <button type="submit" disabled={loading}
               className="btn-primary w-full disabled:opacity-50 flex items-center justify-center">
