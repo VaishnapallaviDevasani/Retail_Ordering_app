@@ -36,9 +36,8 @@ public class OrderService {
             throw new IllegalArgumentException("Cart is empty");
         }
 
-        // 2. Check stock and calculate total
+        // 2. Check stock and calculate total (validate without reducing)
         BigDecimal totalAmount = BigDecimal.ZERO;
-        List<Inventory> inventoriesToUpdate = new ArrayList<>();
 
         for (CartItem cartItem : cartItems) {
             Inventory inventory = inventoryRepository.findByProductId(cartItem.getProduct().getId())
@@ -55,9 +54,6 @@ public class OrderService {
             totalAmount = totalAmount.add(
                     cartItem.getProduct().getPrice().multiply(BigDecimal.valueOf(cartItem.getQuantity()))
             );
-
-            inventory.setQuantity(inventory.getQuantity() - cartItem.getQuantity());
-            inventoriesToUpdate.add(inventory);
         }
 
         // 3. Create order
@@ -81,10 +77,7 @@ public class OrderService {
         // 5. Save order
         Order savedOrder = orderRepository.save(order);
 
-        // 6. Reduce inventory
-        inventoryRepository.saveAll(inventoriesToUpdate);
-
-        // 7. Clear cart
+        // 6. Clear cart (inventory will be reduced when order is confirmed)
         cartItemRepository.deleteByUser(user);
 
         return mapToDTO(savedOrder);
@@ -107,9 +100,36 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + orderId));
 
+        // If status is being changed to CONFIRMED, update inventory
+        if ("CONFIRMED".equalsIgnoreCase(status) && !"CONFIRMED".equalsIgnoreCase(order.getStatus())) {
+            updateInventoryForConfirmedOrder(order);
+        }
+
         order.setStatus(status);
         Order saved = orderRepository.save(order);
         return mapToDTO(saved);
+    }
+
+    @Transactional
+    private void updateInventoryForConfirmedOrder(Order order) {
+        // Reduce inventory for each item in the order when order is confirmed
+        for (OrderItem orderItem : order.getOrderItems()) {
+            Inventory inventory = inventoryRepository.findByProductId(orderItem.getProduct().getId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Inventory not found for product: " + orderItem.getProduct().getName()));
+
+            // Check if there's enough stock
+            if (inventory.getQuantity() < orderItem.getQuantity()) {
+                throw new InsufficientStockException(
+                        "Insufficient stock for " + orderItem.getProduct().getName()
+                                + ". Available: " + inventory.getQuantity()
+                                + ", Requested: " + orderItem.getQuantity());
+            }
+
+            // Reduce inventory
+            inventory.setQuantity(inventory.getQuantity() - orderItem.getQuantity());
+            inventoryRepository.save(inventory);
+        }
     }
 
     private OrderDTO mapToDTO(Order order) {
