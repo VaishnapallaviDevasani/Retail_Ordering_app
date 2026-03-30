@@ -58,21 +58,27 @@ public class AuthService {
     }
 
     public UserDTO login(LoginRequest request, HttpServletRequest httpRequest, HttpServletResponse httpResponse) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
-        );
-
-        SecurityContext context = SecurityContextHolder.createEmptyContext();
-        context.setAuthentication(authentication);
-        SecurityContextHolder.setContext(context);
-
-        // Force session creation
-        httpRequest.getSession(true);
-
+        // First check if user exists
         User user = userRepository.findByUsername(request.getUsername())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        return mapToDTO(user);
+        // Then authenticate with credentials
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword())
+            );
+
+            SecurityContext context = SecurityContextHolder.createEmptyContext();
+            context.setAuthentication(authentication);
+            SecurityContextHolder.setContext(context);
+
+            // Force session creation
+            httpRequest.getSession(true);
+
+            return mapToDTO(user);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid username or password");
+        }
     }
 
     public UserDTO getCurrentUser(String username) {

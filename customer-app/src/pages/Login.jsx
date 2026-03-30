@@ -22,6 +22,7 @@ export default function Login() {
         setError('Please use the admin portal to login as admin');
       }
     } catch (err) {
+      console.log(err);
       setError(err.response?.data?.message || 'Invalid username or password');
     } finally {
       setLoading(false);
