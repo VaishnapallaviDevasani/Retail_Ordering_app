@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 
@@ -5,14 +6,20 @@ export default function Products() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [activeCategory, setActiveCategory] = useState(null);
+  const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState(null);
   const [toast, setToast] = useState('');
 
+
   useEffect(() => {
     fetchCategories();
-    fetchProducts();
   }, []);
+
+  useEffect(() => {
+    fetchProducts(activeCategory, search);
+    // eslint-disable-next-line
+  }, [activeCategory, search]);
 
   const fetchCategories = async () => {
     try {
@@ -21,19 +28,23 @@ export default function Products() {
     } catch {}
   };
 
-  const fetchProducts = async (categoryId = null) => {
+
+  const fetchProducts = async (categoryId = null, searchQuery = '') => {
     setLoading(true);
     try {
-      const url = categoryId ? `/products/category/${categoryId}` : '/products';
-      const res = await api.get(url);
+      let url = '/products';
+      const params = {};
+      if (categoryId) params.categoryId = categoryId;
+      if (searchQuery) params.search = searchQuery;
+      const res = await api.get(url, { params });
       setProducts(res.data);
     } catch {}
     setLoading(false);
   };
 
+
   const handleCategoryFilter = (categoryId) => {
     setActiveCategory(categoryId);
-    fetchProducts(categoryId);
   };
 
   const addToCart = async (productId) => {
@@ -51,13 +62,13 @@ export default function Products() {
     setToast(msg);
     setTimeout(() => setToast(''), 2500);
   };
-
   const getCategoryEmoji = (name) => {
     if (name?.includes('Pizza')) return '🍕';
     if (name?.includes('Drink')) return '🥤';
     if (name?.includes('Bread')) return '🍞';
     return '📦';
   };
+
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -73,6 +84,17 @@ export default function Products() {
         <h1 className="text-4xl font-bold text-white mb-2">Our Menu</h1>
         <p className="text-gray-400 text-lg">Choose from our delicious selection</p>
       </div>
+
+      {/* Search Bar */}
+      {/* <div className="flex justify-center mb-8">
+        <input
+          type="text"
+          placeholder="Search products..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full max-w-md px-4 py-2 rounded-xl border border-blue-500/30 bg-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+      </div> */}
 
       {/* Category Tabs */}
       <div className="flex flex-wrap justify-center gap-3 mb-10">
@@ -133,7 +155,7 @@ export default function Products() {
                     ) : (
                       <span className="badge bg-red-500/10 text-red-400 border border-red-500/20">Out of Stock</span>
                     )}
-                    <span className="text-xs text-gray-500">{product.stock > 0 ? `${product.stock} left` : ''}</span>
+                    {/* <span className="text-xs text-gray-500">{product.stock > 0 ? `${product.stock} left` : ''}</span> */}
                   </div>
                 </div>
               </div>
