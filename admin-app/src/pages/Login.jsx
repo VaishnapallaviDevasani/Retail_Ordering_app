@@ -57,7 +57,7 @@ export default function Login() {
             </button>
           </form>
 
-          <p className="text-center text-gray-500 mt-6 text-xs">Default: admin / admin123</p>
+          {/* <p className="text-center text-gray-500 mt-6 text-xs">Default: admin / admin123</p> */}
         </div>
       </div>
     </div>
