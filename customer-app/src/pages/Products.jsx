@@ -10,6 +10,7 @@ export default function Products() {
   const [loading, setLoading] = useState(true);
   const [addingId, setAddingId] = useState(null);
   const [toast, setToast] = useState('');
+  const [failedImages, setFailedImages] = useState(new Set());
 
 
   useEffect(() => {
@@ -67,6 +68,31 @@ export default function Products() {
     if (name?.includes('Drink')) return '🥤';
     if (name?.includes('Bread')) return '🍞';
     return '📦';
+  };
+
+  const renderProductImage = (imageUrl, categoryName, productId) => {
+    const isFailed = failedImages.has(productId);
+    
+    if (!imageUrl) {
+      return <span className="text-7xl">{getCategoryEmoji(categoryName)}</span>;
+    }
+    
+    // Check if it's a URL
+    if (imageUrl.startsWith('http')) {
+      return isFailed ? (
+        <span className="text-7xl">{getCategoryEmoji(categoryName)}</span>
+      ) : (
+        <img 
+          src={imageUrl} 
+          alt="Product" 
+          className="w-full h-full object-cover" 
+          onError={() => setFailedImages(prev => new Set([...prev, productId]))}
+        />
+      );
+    }
+    
+    // It's an emoji or text
+    return <span className="text-7xl">{imageUrl}</span>;
   };
 
 
@@ -129,8 +155,8 @@ export default function Products() {
           {products.map(product => (
             <div key={product.id} className="glass-card overflow-hidden group hover:border-blue-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1">
               {/* Product Image/Emoji */}
-              <div className="h-44 bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center text-7xl group-hover:scale-110 transition-transform duration-500">
-                {product.imageUrl || getCategoryEmoji(product.categoryName)}
+              <div className="h-44 bg-gradient-to-br from-blue-500/10 to-purple-500/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                {renderProductImage(product.imageUrl, product.categoryName, product.id)}
               </div>
 
               <div className="p-5">
