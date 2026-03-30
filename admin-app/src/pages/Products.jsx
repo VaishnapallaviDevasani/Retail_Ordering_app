@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../api/axios';
 
 export default function Products() {
@@ -8,8 +8,15 @@ export default function Products() {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', description: '', price: '', imageUrl: '', categoryId: '', initialStock: '0' });
   const [loading, setLoading] = useState(true);
+  const formRef = useRef(null);
 
   useEffect(() => { fetchProducts(); fetchCategories(); }, []);
+
+  useEffect(() => {
+    if (showForm && formRef.current) {
+      formRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [showForm]);
 
   const fetchProducts = async () => {
     try { const res = await api.get('/products'); setProducts(res.data); } catch {}
@@ -70,7 +77,7 @@ export default function Products() {
 
       {/* Add/Edit Form */}
       {showForm && (
-        <div className="glass-card p-6 mb-8 animate-in">
+        <div ref={formRef} className="glass-card p-6 mb-8 animate-in">
           <h2 className="text-xl font-bold text-white mb-4">{editing ? 'Edit Product' : 'New Product'}</h2>
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
