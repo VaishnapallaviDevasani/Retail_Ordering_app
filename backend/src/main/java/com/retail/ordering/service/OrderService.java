@@ -20,12 +20,14 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
     private final InventoryRepository inventoryRepository;
+    private final EmailService emailService;
 
     public OrderService(OrderRepository orderRepository, CartItemRepository cartItemRepository,
-                        InventoryRepository inventoryRepository) {
+                        InventoryRepository inventoryRepository, EmailService emailService) {
         this.orderRepository = orderRepository;
         this.cartItemRepository = cartItemRepository;
         this.inventoryRepository = inventoryRepository;
+        this.emailService = emailService;
     }
 
     @Transactional
@@ -80,7 +82,11 @@ public class OrderService {
         // 6. Clear cart (inventory will be reduced when order is confirmed)
         cartItemRepository.deleteByUser(user);
 
-        return mapToDTO(savedOrder);
+        // 8. Send order confirmation email
+        OrderDTO orderDTO = mapToDTO(savedOrder);
+        emailService.sendOrderConfirmation(user.getEmail(), user.getUsername(), orderDTO);
+
+        return orderDTO;
     }
 
     public List<OrderDTO> getMyOrders(User user) {
@@ -107,6 +113,10 @@ public class OrderService {
 
         order.setStatus(status);
         Order saved = orderRepository.save(order);
+        
+        // Send status update email
+        emailService.sendOrderStatusUpdate(order.getUser().getEmail(), order.getUser().getUsername(), orderId, status);
+        
         return mapToDTO(saved);
     }
 
