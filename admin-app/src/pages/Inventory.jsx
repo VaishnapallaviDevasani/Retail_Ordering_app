@@ -6,6 +6,7 @@ export default function Inventory() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState(null);
   const [editQty, setEditQty] = useState('');
+  const [errors, setErrors] = useState({});
 
   useEffect(() => { fetchInventory(); }, []);
 
@@ -17,14 +18,34 @@ export default function Inventory() {
   const handleEdit = (item) => {
     setEditingId(item.productId);
     setEditQty(item.quantity.toString());
+    setErrors({});
   };
 
   const handleSave = async (productId) => {
+    const newErrors = {};
+    const qty = parseInt(editQty);
+
+    if (!editQty) {
+      newErrors.quantity = 'Quantity is required';
+    } else if (isNaN(qty)) {
+      newErrors.quantity = 'Quantity must be a valid number';
+    } else if (qty < 0) {
+      newErrors.quantity = 'Quantity cannot be negative';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
     try {
-      await api.put(`/admin/inventory/${productId}`, { quantity: parseInt(editQty) });
+      await api.put(`/admin/inventory/${productId}`, { quantity: qty });
       setEditingId(null);
+      setErrors({});
       fetchInventory();
-    } catch {}
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update inventory');
+    }
   };
 
   const getStockLevel = (qty) => {
@@ -72,8 +93,11 @@ export default function Inventory() {
                     </td>
                     <td className="p-4">
                       {editingId === item.productId ? (
-                        <input type="number" value={editQty} onChange={e => setEditQty(e.target.value)}
-                          className="input-field w-24 py-1 px-2 text-sm" autoFocus />
+                        <div>
+                          <input type="number" value={editQty} onChange={e => { setEditQty(e.target.value); setErrors({}); }}
+                            className={`input-field w-24 py-1 px-2 text-sm ${errors.quantity ? 'border-red-500' : ''}`} autoFocus />
+                          {errors.quantity && <p className="text-red-400 text-xs mt-1">{errors.quantity}</p>}
+                        </div>
                       ) : (
                         <span className="text-white font-bold text-lg">{item.quantity}</span>
                       )}
